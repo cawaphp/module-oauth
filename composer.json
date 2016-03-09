@@ -1,0 +1,24 @@
+{
+    "name": "cawaphp/module-oauth",
+    "description": "Сáша module-oauth",
+    "keywords": ["cawa", "oauth", "oauth2"],
+    "minimum-stability": "dev",
+    "prefer-stable" : true,
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "tchiotludo"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Cawa\\Oauth\\": "src"
+        }
+    },
+    "require": {
+        "php": "~7.0",
+        "cawaphp/cawa" : "dev-master",
+        "cawaphp/httpclient" : "dev-master",
+        "lusitanian/oauth": "^0.8.9"
+    }
+}
