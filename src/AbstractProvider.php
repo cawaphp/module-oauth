@@ -46,7 +46,7 @@ abstract class AbstractProvider
         $credentials = new Credentials(
             DI::config()->get('socials/' . $service . '/key'),
             DI::config()->get('socials/' . $service . '/secret'),
-            self::router()->getUri('oauth/end', ['service' => $service], true)
+            self::router()->getUri('oauth/end', ['service' => $service])->get(false)
         );
 
         // Oauth Service

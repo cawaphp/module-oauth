@@ -15,6 +15,7 @@ namespace Cawa\Oauth;
 
 use Cawa\Router\Route;
 use Cawa\Router\RouterFactory;
+use Cawa\Router\UserInput;
 
 class Module extends \Cawa\App\Module
 {
@@ -24,6 +25,11 @@ class Module extends \Cawa\App\Module
      * the session variable with User Object or Error Object
      */
     const SESSION_NAME = 'OAUTH';
+
+    /**
+     * the redirect url
+     */
+    const SESSION_FROM  = 'FROM';
 
     /**
      * @var string
@@ -57,6 +63,9 @@ class Module extends \Cawa\App\Module
             Route::create()->setName('oauth/start')
                 ->setMatch("/oauth/$providers/start")
                 ->setController('Cawa\\Oauth\\Controller::start')
+                ->setUserInputs([
+                    new UserInput("from", "string")
+                ])
         ]);
 
         self::router()->addRoutes([

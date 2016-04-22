@@ -27,13 +27,18 @@ class Controller extends AbstractController
 
     /**
      * @param string $service
+     * @param string $from
      *
      * @return string
      */
-    public function start(string $service)
+    public function start(string $service, string $from = null)
     {
+        if ($from) {
+            self::session()->set(Module::SESSION_FROM, $from);
+        }
+
         $provider = AbstractProvider::create($service);
-        $this->response()->redirect($provider->getAuthorizationUri());
+        $this->response()->redirect((string) $provider->getAuthorizationUri());
     }
 
     /**
@@ -53,7 +58,17 @@ class Controller extends AbstractController
         /* @var \Cawa\Oauth\Module $module */
         $module = AbstractApp::instance()->getModule('Cawa\\Oauth\\Module');
 
-        $url = $this->router()->getUri($module->getRedirectRoute());
+        $url = self::session()->get(Module::SESSION_FROM);
+        self::session()->remove(Module::SESSION_FROM);
+
+        if (!$user instanceof User) {
+            $url = null;
+        }
+
+        if (!$url) {
+            $url = $this->router()->getUri($module->getRedirectRoute());
+        }
+
         $this->response()->redirect($url);
     }
 }
