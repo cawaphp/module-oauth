@@ -13,7 +13,7 @@ declare (strict_types=1);
 
 namespace Cawa\Oauth\Providers;
 
-use Cawa\App\App;
+use Cawa\App\HttpFactory;
 use Cawa\Oauth\AbstractProvider;
 use Cawa\Oauth\Exceptions\Denied;
 use Cawa\Oauth\User;
@@ -21,6 +21,8 @@ use OAuth\OAuth2\Service\Google as GoogleService;
 
 class Google extends AbstractProvider
 {
+    use HttpFactory;
+
     const DEFAULT_SCOPES = [
         GoogleService::SCOPE_USERINFO_EMAIL,
         GoogleService::SCOPE_USERINFO_PROFILE,
@@ -36,10 +38,10 @@ class Google extends AbstractProvider
      */
     public function getUser()
     {
-        $code = App::request()->getQuery('code');
-        $state = App::request()->getQuery('state');
+        $code = $this->request()->getQuery('code');
+        $state = $this->request()->getQuery('state');
 
-        $error = App::request()->getQuery('error');
+        $error = $this->request()->getQuery('error');
 
         if ($error == 'access_denied') {
             return new Denied($this->getType(), $error, sprintf("Error Code '%s'", $error));

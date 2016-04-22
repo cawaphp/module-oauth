@@ -13,15 +13,17 @@ declare (strict_types=1);
 
 namespace Cawa\Oauth;
 
-use Cawa\App\App;
 use Cawa\Core\DI;
 use Cawa\Oauth;
+use Cawa\Router\RouterFactory;
 use OAuth\Common\Consumer\Credentials;
 use OAuth\Common\Service\ServiceInterface;
 use OAuth\ServiceFactory;
 
 abstract class AbstractProvider
 {
+    use RouterFactory;
+
     /**
      * @var string
      */
@@ -44,7 +46,7 @@ abstract class AbstractProvider
         $credentials = new Credentials(
             DI::config()->get('socials/' . $service . '/key'),
             DI::config()->get('socials/' . $service . '/secret'),
-            App::router()->getUri('oauth.end', ['service' => $service], true)
+            self::router()->getUri('oauth/end', ['service' => $service], true)
         );
 
         // Oauth Service

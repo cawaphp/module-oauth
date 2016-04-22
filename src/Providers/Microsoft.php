@@ -13,7 +13,7 @@ declare (strict_types=1);
 
 namespace Cawa\Oauth\Providers;
 
-use Cawa\App\App;
+use Cawa\App\HttpFactory;
 use Cawa\Date\Date;
 use Cawa\Oauth\AbstractProvider;
 use Cawa\Oauth\User;
@@ -21,6 +21,8 @@ use OAuth\OAuth2\Service\Microsoft as MicrosoftService;
 
 class Microsoft extends AbstractProvider
 {
+    use HttpFactory;
+
     const DEFAULT_SCOPES = [
         MicrosoftService::SCOPE_BASIC,
         MicrosoftService::SCOPE_CONTACTS_EMAILS,
@@ -38,8 +40,8 @@ class Microsoft extends AbstractProvider
      */
     public function getUser() : User
     {
-        $code = App::request()->getQuery('code');
-        $state = App::request()->getQuery('state');
+        $code = $this->request()->getQuery('code');
+        $state = $this->request()->getQuery('state');
 
         if (!$code) {
             throw new \LogicException('No code found on oauth route end');

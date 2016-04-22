@@ -13,11 +13,13 @@ declare (strict_types=1);
 
 namespace Cawa\Oauth;
 
-use Cawa\App\App;
 use Cawa\Router\Route;
+use Cawa\Router\RouterFactory;
 
 class Module extends \Cawa\App\Module
 {
+    use RouterFactory;
+
     /**
      * the session variable with User Object or Error Object
      */
@@ -51,14 +53,14 @@ class Module extends \Cawa\App\Module
     {
         $providers = '{{C:<service>(twitter|facebook|microsoft|google)}}';
 
-        App::router()->addRoutes([
-            Route::create()->setName('oauth.start')
+        self::router()->addRoutes([
+            Route::create()->setName('oauth/start')
                 ->setMatch("/oauth/$providers/start")
                 ->setController('Cawa\\Oauth\\Controller::start')
         ]);
 
-        App::router()->addRoutes([
-            Route::create()->setName('oauth.end')
+        self::router()->addRoutes([
+            Route::create()->setName('oauth/end')
                 ->setMatch("/oauth/$providers/end")
                 ->setController('Cawa\\Oauth\\Controller::end')
         ]);

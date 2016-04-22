@@ -13,13 +13,15 @@ declare (strict_types=1);
 
 namespace Cawa\Oauth\Providers;
 
-use Cawa\App\App;
+use Cawa\App\HttpFactory;
 use Cawa\Oauth\AbstractProvider;
 use Cawa\Oauth\User;
 use OAuth\OAuth1\Service\Twitter as TwitterService;
 
 class Twitter extends AbstractProvider
 {
+    use HttpFactory;
+
     /**
      * @var TwitterService
      */
@@ -30,8 +32,8 @@ class Twitter extends AbstractProvider
      */
     public function getUser() : User
     {
-        $oauthToken = App::request()->getQuery('oauth_token');
-        $oauthVerifier = App::request()->getQuery('oauth_verifier');
+        $oauthToken = $this->request()->getQuery('oauth_token');
+        $oauthVerifier = $this->request()->getQuery('oauth_verifier');
 
         if (!$oauthToken || !$oauthVerifier) {
             throw new \LogicException('No code found on oauth route end');

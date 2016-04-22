@@ -13,9 +13,9 @@ declare (strict_types = 1);
 
 namespace Cawa\Oauth;
 
-use Cawa\HttpClient\HttpClient as BaseHttpClient;
 use Cawa\Http\Request;
-use Cawa\Uri\Uri;
+use Cawa\HttpClient\HttpClient as BaseHttpClient;
+use Cawa\Net\Uri;
 use OAuth\Common\Http\Client\ClientInterface;
 use OAuth\Common\Http\Uri\UriInterface;
 

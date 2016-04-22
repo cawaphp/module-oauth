@@ -13,7 +13,6 @@ declare (strict_types = 1);
 
 namespace Cawa\Oauth;
 
-use Cawa\App\App;
 use Cawa\Session\SessionFactory;
 use OAuth\Common\Storage\Exception\AuthorizationStateNotFoundException;
 use OAuth\Common\Storage\Exception\TokenNotFoundException;

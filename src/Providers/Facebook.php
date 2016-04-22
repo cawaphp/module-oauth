@@ -13,7 +13,7 @@ declare (strict_types=1);
 
 namespace Cawa\Oauth\Providers;
 
-use Cawa\App\App;
+use Cawa\App\HttpFactory;
 use Cawa\Date\Date;
 use Cawa\Oauth\AbstractProvider;
 use Cawa\Oauth\User;
@@ -21,6 +21,8 @@ use OAuth\OAuth2\Service\Facebook as FacebookService;
 
 class Facebook extends AbstractProvider
 {
+    use HttpFactory;
+
     const DEFAULT_SCOPES = [
         FacebookService::SCOPE_EMAIL,
         FacebookService::SCOPE_USER_ABOUT,
@@ -36,8 +38,8 @@ class Facebook extends AbstractProvider
      */
     public function getUser() : User
     {
-        $code = App::request()->getQuery('code');
-        $state = App::request()->getQuery('state');
+        $code = $this->request()->getQuery('code');
+        $state = $this->request()->getQuery('state');
 
         if (!$code) {
             throw new \LogicException('No code found on oauth route end');

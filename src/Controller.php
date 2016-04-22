@@ -13,12 +13,16 @@ declare (strict_types=1);
 
 namespace Cawa\Oauth;
 
-use Cawa\App\App;
-use Cawa\App\Controller\AbstractController;
+use Cawa\App\AbstractApp;
+use Cawa\App\HttpFactory;
+use Cawa\Controller\AbstractController;
+use Cawa\Router\RouterFactory;
 use Cawa\Session\SessionFactory;
 
 class Controller extends AbstractController
 {
+    use HttpFactory;
+    use RouterFactory;
     use SessionFactory;
 
     /**
@@ -29,7 +33,7 @@ class Controller extends AbstractController
     public function start(string $service)
     {
         $provider = AbstractProvider::create($service);
-        App::response()->redirect($provider->getAuthorizationUri());
+        $this->response()->redirect($provider->getAuthorizationUri());
     }
 
     /**
@@ -47,9 +51,9 @@ class Controller extends AbstractController
         self::session()->remove(SessionStorage::SESSION_VAR_TOKEN);
 
         /* @var \Cawa\Oauth\Module $module */
-        $module = App::instance()->getModule('Cawa\\Oauth\\Module');
+        $module = AbstractApp::instance()->getModule('Cawa\\Oauth\\Module');
 
-        $url = App::router()->getUri($module->getRedirectRoute());
-        App::response()->redirect($url);
+        $url = $this->router()->getUri($module->getRedirectRoute());
+        $this->response()->redirect($url);
     }
 }
