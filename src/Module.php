@@ -64,7 +64,7 @@ class Module extends \Cawa\App\Module
                 ->setMatch("/oauth/$providers/start")
                 ->setController('Cawa\\Oauth\\Controller::start')
                 ->setUserInputs([
-                    new UserInput("from", "string")
+                    new UserInput('from', 'string')
                 ])
         ]);
 
