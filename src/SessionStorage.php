@@ -70,7 +70,6 @@ class SessionStorage implements TokenStorageInterface
         // save
         self::session()->set(self::SESSION_VAR_TOKEN, $tokens);
 
-        // allow chaining
         return $this;
     }
 
@@ -82,9 +81,9 @@ class SessionStorage implements TokenStorageInterface
         // get from session
         $tokens = self::session()->get(self::SESSION_VAR_TOKEN);
 
-        return is_array($tokens)
-            && isset($tokens[$service])
-            && $tokens[$service] instanceof TokenInterface;
+        return is_array($tokens) &&
+            isset($tokens[$service]) &&
+            $tokens[$service] instanceof TokenInterface;
     }
 
     /**
@@ -102,7 +101,6 @@ class SessionStorage implements TokenStorageInterface
             self::session()->set(self::SESSION_VAR_TOKEN, $tokens);
         }
 
-        // allow chaining
         return $this;
     }
 
@@ -113,7 +111,6 @@ class SessionStorage implements TokenStorageInterface
     {
         self::session()->remove(self::SESSION_VAR_TOKEN);
 
-        // allow chaining
         return $this;
     }
 
@@ -150,7 +147,6 @@ class SessionStorage implements TokenStorageInterface
         // save
         self::session()->set(self::SESSION_VAR_STATE, $states);
 
-        // allow chaining
         return $this;
     }
 
@@ -162,9 +158,9 @@ class SessionStorage implements TokenStorageInterface
         // get from session
         $states = self::session()->get(self::SESSION_VAR_STATE);
 
-        return is_array($states)
-        && isset($states[$service])
-        && null !== $states[$service];
+        return is_array($states) &&
+            isset($states[$service]) &&
+            $states[$service] !== null;
     }
 
     /**
@@ -182,7 +178,6 @@ class SessionStorage implements TokenStorageInterface
             self::session()->set(self::SESSION_VAR_STATE, $states);
         }
 
-        // allow chaining
         return $this;
     }
 
@@ -193,7 +188,6 @@ class SessionStorage implements TokenStorageInterface
     {
         self::session()->remove(self::SESSION_VAR_STATE);
 
-        // allow chaining
         return $this;
     }
 }
