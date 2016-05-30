@@ -19,6 +19,6 @@
         "php": "~7.0",
         "cawaphp/cawa" : "dev-master",
         "cawaphp/httpclient" : "dev-master",
-        "lusitanian/oauth": "^0.8.9"
+        "lusitanian/oauth": "~0.8.9"
     }
 }
