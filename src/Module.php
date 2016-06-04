@@ -60,7 +60,7 @@ class Module extends \Cawa\App\Module
         $providers = '{{C:<service>(twitter|facebook|microsoft|google)}}';
 
         self::router()->addRoutes([
-            Route::create()->setName('oauth/start')
+            (new Route())->setName('oauth/start')
                 ->setMatch("/oauth/$providers/start")
                 ->setController('Cawa\\Oauth\\Controller::start')
                 ->setUserInputs([
@@ -69,7 +69,7 @@ class Module extends \Cawa\App\Module
         ]);
 
         self::router()->addRoutes([
-            Route::create()->setName('oauth/end')
+            (new Route())->setName('oauth/end')
                 ->setMatch("/oauth/$providers/end")
                 ->setController('Cawa\\Oauth\\Controller::end')
         ]);
