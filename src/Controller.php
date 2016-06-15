@@ -66,7 +66,7 @@ class Controller extends AbstractController
         }
 
         if (!$url) {
-            $url = $this->router()->getUri($module->getRedirectRoute());
+            $url = $this->uri($module->getRedirectRoute());
         }
 
         $this->response()->redirect($url);
