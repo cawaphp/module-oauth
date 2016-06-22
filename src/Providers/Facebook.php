@@ -26,7 +26,10 @@ class Facebook extends AbstractProvider
     const DEFAULT_SCOPES = [
         FacebookService::SCOPE_EMAIL,
         FacebookService::SCOPE_USER_ABOUT,
+        FacebookService::SCOPE_USER_BIRTHDAY,
     ];
+
+    const API_VERSION = "2.4";
 
     /**
      * @var FacebookService
@@ -49,7 +52,9 @@ class Facebook extends AbstractProvider
         $token = $this->service->requestAccessToken($code, $state);
 
         // Send a request with it
-        $result = json_decode($this->service->request('/me'), true);
+        $result = json_decode($this->service->request(
+            '/me?fields=id,name,birthday,verified,first_name,last_name,email,locale'
+        ), true);
 
         $gender = $this->pop($result, 'gender');
         $birthday = $this->pop($result, 'birthday');
@@ -67,7 +72,6 @@ class Facebook extends AbstractProvider
         $user = new User($this->getType());
         $user->setUid($this->pop($result, 'id'))
             ->setEmail($this->pop($result, 'email'))
-            ->setUsername($this->pop($result, 'username'))
             ->setVerified($this->pop($result, 'verified'))
             ->setFirstName($this->pop($result, 'first_name'))
             ->setLastName($this->pop($result, 'last_name'))

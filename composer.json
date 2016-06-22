@@ -15,10 +15,16 @@
             "Cawa\\Oauth\\": "src"
         }
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/tchiotludo/PHPoAuthLib"
+        }
+    ],
     "require": {
         "php": "~7.0",
         "cawaphp/cawa" : "dev-master",
         "cawaphp/httpclient" : "dev-master",
-        "lusitanian/oauth": "~0.8.9"
+        "lusitanian/oauth": "dev-fix/facebook-api-version as v0.8.9"
     }
 }

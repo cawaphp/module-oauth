@@ -59,19 +59,25 @@ abstract class AbstractProvider
         $provider = new $class();
         $provider->type = $service;
 
-        // Instantiate the service using the credentials, http client and storage mechanism for the token
+
+        // scope
         $scopes = DI::config()->getIfExists('socials/' . $service . '/scopes');
 
         if (!$scopes && defined($class . '::DEFAULT_SCOPES')) {
             $scopes = constant($class . '::DEFAULT_SCOPES');
         }
 
-        if ($scopes) {
-            $service = $serviceFactory->createService($service, $credentials, $storage, $scopes);
-        } else {
-            $service = $serviceFactory->createService($service, $credentials, $storage);
+        if (!$scopes) {
+            $scopes = [];
         }
 
+        // version
+        $version = null;
+        if (defined($class . '::API_VERSION')) {
+            $version = constant($class . '::API_VERSION');
+        }
+
+        $service = $serviceFactory->createService($service, $credentials, $storage, $scopes, null, $version);
         $provider->service = $service;
 
         return $provider;
