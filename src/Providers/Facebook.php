@@ -29,7 +29,7 @@ class Facebook extends AbstractProvider
         FacebookService::SCOPE_USER_BIRTHDAY,
     ];
 
-    const API_VERSION = "2.4";
+    const API_VERSION = '2.4';
 
     /**
      * @var FacebookService

@@ -59,7 +59,6 @@ abstract class AbstractProvider
         $provider = new $class();
         $provider->type = $service;
 
-
         // scope
         $scopes = DI::config()->getIfExists('socials/' . $service . '/scopes');
 
