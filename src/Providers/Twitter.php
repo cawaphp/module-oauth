@@ -32,8 +32,8 @@ class Twitter extends AbstractProvider
      */
     public function getUser() : User
     {
-        $oauthToken = $this->request()->getQuery('oauth_token');
-        $oauthVerifier = $this->request()->getQuery('oauth_verifier');
+        $oauthToken = self::request()->getQuery('oauth_token');
+        $oauthVerifier = self::request()->getQuery('oauth_verifier');
 
         if (!$oauthToken || !$oauthVerifier) {
             throw new \LogicException('No code found on oauth route end');

@@ -40,8 +40,8 @@ class Microsoft extends AbstractProvider
      */
     public function getUser() : User
     {
-        $code = $this->request()->getQuery('code');
-        $state = $this->request()->getQuery('state');
+        $code = self::request()->getQuery('code');
+        $state = self::request()->getQuery('state');
 
         if (!$code) {
             throw new \LogicException('No code found on oauth route end');

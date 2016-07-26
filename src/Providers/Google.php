@@ -38,10 +38,10 @@ class Google extends AbstractProvider
      */
     public function getUser()
     {
-        $code = $this->request()->getQuery('code');
-        $state = $this->request()->getQuery('state');
+        $code = self::request()->getQuery('code');
+        $state = self::request()->getQuery('state');
 
-        $error = $this->request()->getQuery('error');
+        $error = self::request()->getQuery('error');
 
         if ($error == 'access_denied') {
             return new Denied($this->getType(), $error, sprintf("Error Code '%s'", $error));

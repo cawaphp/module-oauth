@@ -38,7 +38,7 @@ class Controller extends AbstractController
         }
 
         $provider = AbstractProvider::create($service);
-        $this->response()->redirect((string) $provider->getAuthorizationUri());
+        self::response()->redirect((string) $provider->getAuthorizationUri());
     }
 
     /**
@@ -66,9 +66,9 @@ class Controller extends AbstractController
         }
 
         if (!$url) {
-            $url = $this->uri($module->getRedirectRoute());
+            $url = self::uri($module->getRedirectRoute());
         }
 
-        $this->response()->redirect($url);
+        self::response()->redirect($url);
     }
 }
