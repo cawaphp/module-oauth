@@ -33,7 +33,7 @@ class User
     /**
      * @param string $type
      *
-     * @return $this
+     * @return $this|self
      */
     public function setType(string $type) : self
     {
@@ -58,7 +58,7 @@ class User
     /**
      * @param string $uid
      *
-     * @return User
+     * @return $this|self
      */
     public function setUid(string $uid) : self
     {
@@ -83,7 +83,7 @@ class User
     /**
      * @param string $username
      *
-     * @return User
+     * @return $this|self
      */
     public function setUsername($username) : self
     {
@@ -108,7 +108,7 @@ class User
     /**
      * @param string $email
      *
-     * @return User
+     * @return $this|self
      */
     public function setEmail($email) : self
     {
@@ -133,7 +133,7 @@ class User
     /**
      * @param bool $verified
      *
-     * @return $this
+     * @return $this|self
      */
     public function setVerified(bool $verified) : self
     {
@@ -158,7 +158,7 @@ class User
     /**
      * @param string $firstName
      *
-     * @return User
+     * @return $this|self
      */
     public function setFirstName($firstName) : self
     {
@@ -183,7 +183,7 @@ class User
     /**
      * @param string $lastName
      *
-     * @return User
+     * @return $this|self
      */
     public function setLastName($lastName) : self
     {
@@ -218,7 +218,7 @@ class User
     /**
      * @param string $gender
      *
-     * @return User
+     * @return $this|self
      */
     public function setGender($gender) : self
     {
@@ -243,7 +243,7 @@ class User
     /**
      * @param Date $birthday
      *
-     * @return User
+     * @return $this|self
      */
     public function setBirthday(Date $birthday = null) : self
     {
@@ -268,7 +268,7 @@ class User
     /**
      * @param string $locale
      *
-     * @return $this
+     * @return $this|self
      */
     public function setLocale($locale) : self
     {
