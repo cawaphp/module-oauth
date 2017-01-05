@@ -14,9 +14,11 @@ declare (strict_types = 1);
 namespace Cawa\Oauth\Providers;
 
 use Cawa\App\HttpFactory;
+use Cawa\Core\DI;
 use Cawa\Date\Date;
 use Cawa\Oauth\AbstractProvider;
 use Cawa\Oauth\User;
+use Cawa\Renderer\HtmlPage;
 use OAuth\OAuth2\Service\Facebook as FacebookService;
 
 class Facebook extends AbstractProvider
@@ -29,7 +31,7 @@ class Facebook extends AbstractProvider
         FacebookService::SCOPE_USER_BIRTHDAY,
     ];
 
-    const API_VERSION = '2.4';
+    const API_VERSION = '2.8';
 
     /**
      * @var FacebookService
@@ -82,5 +84,44 @@ class Facebook extends AbstractProvider
         ;
 
         return $user;
+    }
+
+    /**
+     * @param string $redirect
+     *
+     * @return HtmlPage
+     */
+    public function getClientMasterpage(string $redirect) : HtmlPage
+    {
+        $masterpage = (new HtmlPage());
+        $masterpage->setHeadTitle('Facebook Connect');
+        $masterpage->addJs('//connect.facebook.net/en_US/sdk.js');
+        $masterpage->addJs("
+            window.fbAsyncInit = function ()
+            {
+                FB.init({
+                    appId: '" . DI::config()->get('socials/' . $this->getType() . '/key') . "',
+                    version: 'v" . self::API_VERSION . "', 
+                    cookie: true
+                });
+            
+                FB.getLoginStatus(function (response)
+                {
+                    if (console && console.log) {
+                        console.log(response.status);
+                    }
+
+                    if (response.status === 'connected') {
+                        window.location.href = '/oauth/facebook/start'
+                    } else if (response.status === 'not_authorized') {
+                        window.location.href = " .  json_encode($redirect) . "
+                    } else {
+                        window.location.href = " .  json_encode($redirect) . "
+                    }
+                });
+            };
+        ");
+
+        return $masterpage;
     }
 }

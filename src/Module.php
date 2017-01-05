@@ -69,6 +69,15 @@ class Module extends \Cawa\App\Module
         ]);
 
         self::router()->addRoutes([
+            (new Route())->setName('oauth/client')
+                ->setMatch("/oauth/{{C:<service>(facebook)}}/client")
+                ->setController('Cawa\\Oauth\\Controller::client')
+                ->setUserInputs([
+                    new UserInput('from', 'string')
+                ])
+        ]);
+
+        self::router()->addRoutes([
             (new Route())->setName('oauth/end')
                 ->setMatch("/oauth/$providers/end")
                 ->setController('Cawa\\Oauth\\Controller::end')

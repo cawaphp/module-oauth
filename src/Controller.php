@@ -16,6 +16,8 @@ namespace Cawa\Oauth;
 use Cawa\App\AbstractApp;
 use Cawa\App\HttpFactory;
 use Cawa\Controller\AbstractController;
+use Cawa\Oauth\Providers\Facebook;
+use Cawa\Renderer\Element;
 use Cawa\Router\RouterFactory;
 use Cawa\Session\SessionFactory;
 
@@ -29,7 +31,7 @@ class Controller extends AbstractController
      * @param string $service
      * @param string $from
      *
-     * @return string
+     * @return void
      */
     public function start(string $service, string $from = null)
     {
@@ -44,7 +46,7 @@ class Controller extends AbstractController
     /**
      * @param string $service
      *
-     * @return string
+     * @return void
      */
     public function end(string $service)
     {
@@ -70,5 +72,86 @@ class Controller extends AbstractController
         }
 
         self::response()->redirect($url);
+    }
+
+    /**
+     * @param string $service
+     * @param string|null $from
+     *
+     * @return string
+     */
+    public function client(string $service, string $from = null)
+    {
+        if ($from) {
+            self::session()->set(Module::SESSION_FROM, $from);
+        }
+
+        /* @var \Cawa\Oauth\Module $module */
+        $module = AbstractApp::instance()->getModule('Cawa\\Oauth\\Module');
+
+        /** @var Facebook $provider */
+        $provider = AbstractProvider::create($service);
+        $masterpage = $provider->getClientMasterPage($from ?: self::uri($module->getRedirectRoute())->get(false));
+
+        $masterpage->addCss('
+            .spinner {
+                width: 70px;
+                text-align: center;
+                top: 50%;
+                margin-top: -11px;
+                position: absolute;
+                margin-left: -35px;
+                left: 50%;
+            }
+            
+            .spinner > div {
+                width: 18px;
+                height: 18px;
+                background-color: #333;
+            
+                border-radius: 100%;
+                display: inline-block;
+                -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+                animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+            }
+            
+            .spinner .bounce1 {
+                -webkit-animation-delay: -0.32s;
+                animation-delay: -0.32s;
+            }
+            
+            .spinner .bounce2 {
+                -webkit-animation-delay: -0.16s;
+                animation-delay: -0.16s;
+            }
+            
+            @-webkit-keyframes sk-bouncedelay {
+                0%, 80%, 100% {
+                    -webkit-transform: scale(0)
+                }
+                40% {
+                    -webkit-transform: scale(1.0)
+                }
+            }
+            
+            @keyframes sk-bouncedelay {
+                0%, 80%, 100% {
+                    -webkit-transform: scale(0);
+                    transform: scale(0);
+                }
+                40% {
+                    -webkit-transform: scale(1.0);
+                    transform: scale(1.0);
+                }
+            }
+        ');
+
+        $masterpage->getBody()->add(new Element('<div class="spinner">
+          <div class="bounce1"></div>
+          <div class="bounce2"></div>
+          <div class="bounce3"></div>
+        </div>'));
+
+        return $masterpage->render();
     }
 }
