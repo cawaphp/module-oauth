@@ -114,13 +114,13 @@ class Facebook extends AbstractProvider
                     if (response.status === 'connected') {
                         window.location.href = '/oauth/facebook/start'
                     } else if (response.status === 'not_authorized') {
-                        window.location.href = " .  json_encode($redirect) . "
+                        window.location.href = " .  json_encode($redirect) . '
                     } else {
-                        window.location.href = " .  json_encode($redirect) . "
+                        window.location.href = ' .  json_encode($redirect) . '
                     }
                 });
             };
-        ");
+        ');
 
         return $masterpage;
     }

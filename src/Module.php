@@ -70,7 +70,7 @@ class Module extends \Cawa\App\Module
 
         self::router()->addRoutes([
             (new Route())->setName('oauth/client')
-                ->setMatch("/oauth/{{C:<service>(facebook)}}/client")
+                ->setMatch('/oauth/{{C:<service>(facebook)}}/client')
                 ->setController('Cawa\\Oauth\\Controller::client')
                 ->setUserInputs([
                     new UserInput('from', 'string')
