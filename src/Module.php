@@ -57,7 +57,7 @@ class Module extends \Cawa\App\Module
      */
     public function init() : bool
     {
-        $providers = '{{C:<service>(twitter|facebook|microsoft|google)}}';
+        $providers = '{{C:<service>(twitter|facebook|microsoft|google|yahoo)}}';
 
         self::router()->addRoutes([
             (new Route())->setName('oauth/start')
