@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace Cawa\Oauth;
 
@@ -193,12 +193,12 @@ class User
     }
 
     /**
-     * Gender : Male
+     * Gender : Male.
      */
     const GENDER_MALE = 'M';
 
     /**
-     * Gender : Female
+     * Gender : Female.
      */
     const GENDER_FEMALE = 'F';
 

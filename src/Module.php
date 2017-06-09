@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace Cawa\Oauth;
 
@@ -22,14 +22,14 @@ class Module extends \Cawa\App\Module
     use RouterFactory;
 
     /**
-     * the session variable with User Object or Error Object
+     * the session variable with User Object or Error Object.
      */
     const SESSION_NAME = 'OAUTH';
 
     /**
-     * the redirect url
+     * the redirect url.
      */
-    const SESSION_FROM  = 'FROM';
+    const SESSION_FROM = 'FROM';
 
     /**
      * @var string
@@ -64,8 +64,8 @@ class Module extends \Cawa\App\Module
                 ->setMatch("/oauth/$providers/start")
                 ->setController('Cawa\\Oauth\\Controller::start')
                 ->setUserInputs([
-                    new UserInput('from', 'string')
-                ])
+                    new UserInput('from', 'string'),
+                ]),
         ]);
 
         self::router()->addRoutes([
@@ -73,14 +73,14 @@ class Module extends \Cawa\App\Module
                 ->setMatch('/oauth/{{C:<service>(facebook)}}/client')
                 ->setController('Cawa\\Oauth\\Controller::client')
                 ->setUserInputs([
-                    new UserInput('from', 'string')
-                ])
+                    new UserInput('from', 'string'),
+                ]),
         ]);
 
         self::router()->addRoutes([
             (new Route())->setName('oauth/end')
                 ->setMatch("/oauth/$providers/end")
-                ->setController('Cawa\\Oauth\\Controller::end')
+                ->setController('Cawa\\Oauth\\Controller::end'),
         ]);
 
         return true;

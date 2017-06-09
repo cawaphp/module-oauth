@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace Cawa\Oauth;
 
@@ -30,8 +30,6 @@ class Controller extends AbstractController
     /**
      * @param string $service
      * @param string $from
-     *
-     * @return void
      */
     public function start(string $service, string $from = null)
     {
@@ -45,8 +43,6 @@ class Controller extends AbstractController
 
     /**
      * @param string $service
-     *
-     * @return void
      */
     public function end(string $service)
     {

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-declare (strict_types = 1);
+declare(strict_types = 1);
 
 namespace Cawa\Oauth;
 
@@ -26,12 +26,12 @@ class SessionStorage implements TokenStorageInterface
     //region Constants
 
     /**
-     * Access Token
+     * Access Token.
      */
     const SESSION_VAR_TOKEN = 'OAUTH_TOKEN';
 
     /**
-     * State
+     * State.
      */
     const SESSION_VAR_STATE = 'OAUTH_STATE';
 
