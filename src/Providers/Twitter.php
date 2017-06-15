@@ -60,11 +60,13 @@ class Twitter extends AbstractProvider
             }
         }
 
+        $email = $this->pop($result, 'email');
+
         $user = new User($this->getType());
         $user->setUid($this->pop($result, 'id_str'))
-            ->setEmail($this->pop($result, 'email'))
+            ->setEmail($email)
             ->setUsername($this->pop($result, 'screen_name'))
-            ->setVerified($this->pop($result, 'verified'))
+            ->setVerified(!empty($email))
             ->setFirstName($firstname)
             ->setLastName($lastname)
             ->setLocale($this->pop($result, 'lang'))

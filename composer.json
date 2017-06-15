@@ -16,7 +16,7 @@
         }
     },
     "require": {
-        "php": "~7.0",
+        "php": "~7.1",
         "cawaphp/cawa" : "dev-master",
         "cawaphp/httpclient" : "dev-master",
         "lusitanian/oauth": "^0.8.10"

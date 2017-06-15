@@ -15,12 +15,15 @@ namespace Cawa\Oauth;
 
 use Cawa\Http\Request;
 use Cawa\HttpClient\HttpClient as BaseHttpClient;
+use Cawa\HttpClient\HttpClientFactory;
 use Cawa\Net\Uri;
 use OAuth\Common\Http\Client\ClientInterface;
 use OAuth\Common\Http\Uri\UriInterface;
 
 class HttpClient implements ClientInterface
 {
+    use HttpClientFactory;
+
     /**
      * @var BaseHttpClient
      */
@@ -36,7 +39,7 @@ class HttpClient implements ClientInterface
         $method = 'POST'
     ) {
         if (!$this->client) {
-            $this->client = new BaseHttpClient();
+            $this->client = self::httpClient(self::class, false);
         }
 
         $request = new Request(new Uri($endpoint->getAbsoluteUri()));
