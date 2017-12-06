@@ -19,6 +19,13 @@
         "php": "~7.1",
         "cawaphp/cawa" : "dev-master",
         "cawaphp/httpclient" : "dev-master",
-        "lusitanian/oauth": "^0.8.10"
+
+        "league/oauth2-client": "^2.2",
+        "league/oauth1-client": "^1.7",
+
+        "league/oauth2-facebook": "^2.0",
+        "league/oauth2-google": "^2.0",
+        "stevenmaguire/oauth2-microsoft": "^2.2",
+        "microsoft/microsoft-graph": "^1.1"
     }
 }

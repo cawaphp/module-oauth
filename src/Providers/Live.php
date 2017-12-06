@@ -14,23 +14,26 @@ declare(strict_types = 1);
 namespace Cawa\Oauth\Providers;
 
 use Cawa\App\HttpFactory;
+use Cawa\Date\Date;
 use Cawa\HttpClient\HttpClientFactory;
 use Cawa\Oauth\AbstractProvider;
 use Cawa\Oauth\User;
 use League\OAuth2\Client\Provider\AbstractProvider as AbstractProviderBase;
-use League\OAuth2\Client\Provider\Google as BaseService;
+use Stevenmaguire\OAuth2\Client\Provider\Microsoft as BaseService;
 
-class Google extends AbstractProvider
+class Live extends AbstractProvider
 {
     use HttpFactory;
     use HttpClientFactory;
 
-    protected $type = self::TYPE_GOOGLE;
+    protected $type = self::LIVE;
 
-    const BASE_API_URL = 'https://www.googleapis.com/oauth2/v1';
+    const BASE_API_URL = 'https://apis.live.net/v5.0/';
     const DEFAULT_SCOPES = [
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile',
+        'wl.basic',
+        'wl.contacts_emails',
+        'wl.signin',
+        'wl.birthday',
     ];
 
     /**
@@ -59,7 +62,7 @@ class Google extends AbstractProvider
     /**
      * {@inheritdoc}
      */
-    public function getUser()
+    public function getUser() : User
     {
         $code = self::request()->getQuery('code');
 
@@ -73,23 +76,29 @@ class Google extends AbstractProvider
         ]);
 
         // user
-        $request = $this->getService()->getAuthenticatedRequest(
-            BaseService::METHOD_GET,
-            self::BASE_API_URL . '/userinfo',
-            $token
-        );
-        $result = $this->getService()->getParsedResponse($request);
+        $request = $this->getService()->getResourceOwner($token);
+        $result = $request->toArray();
 
-        $gender = $this->pop($result, 'gender');
+        $day = $this->pop($result, 'birth_day') ?? '00';
+        $month = $this->pop($result, 'birth_month') ?? '00';
+        $year = $this->pop($result, 'birth_year') ?? '0000';
+        $birthday = $year . '-' . $month . '-' . $day;
+
+        if ($birthday !== '0000-00-00') {
+            $birthday = new Date($birthday);
+        } else {
+            $birthday = null;
+        }
 
         $user = (new User($this->getType(), $token))
             ->setUid($this->pop($result, 'id'))
-            ->setEmail($this->pop($result, 'email'))
-            ->setVerified($this->pop($result, 'verified_email'))
-            ->setFirstName($this->pop($result, 'given_name'))
-            ->setLastName($this->pop($result, 'family_name'))
-            ->setGender($gender == 'male' ? User::GENDER_MALE : ($gender == 'female' ? User::GENDER_FEMALE : null))
+            ->setEmail($this->pop($result, ['emails', 'preferred']))
+            ->setGender($this->pop($result, 'gender'))
+            ->setUsername($this->pop($result, 'name'))
+            ->setFirstName($this->pop($result, 'first_name'))
+            ->setLastName($this->pop($result, 'last_name'))
             ->setLocale($this->pop($result, 'locale'))
+            ->setBirthday($birthday)
             ->setExtraData($result)
         ;
 

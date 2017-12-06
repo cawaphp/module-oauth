@@ -16,27 +16,51 @@ namespace Cawa\Oauth\Providers;
 use Cawa\App\HttpFactory;
 use Cawa\Core\DI;
 use Cawa\Date\Date;
+use Cawa\HttpClient\HttpClientFactory;
 use Cawa\Oauth\AbstractProvider;
 use Cawa\Oauth\User;
 use Cawa\Renderer\HtmlPage;
-use OAuth\OAuth2\Service\Facebook as FacebookService;
+use League\OAuth2\Client\Provider\AbstractProvider as AbstractProviderBase;
+use League\OAuth2\Client\Provider\AppSecretProof;
+use League\OAuth2\Client\Provider\Facebook as BaseService;
 
 class Facebook extends AbstractProvider
 {
     use HttpFactory;
+    use HttpClientFactory;
 
+    protected $type = self::TYPE_FACEBOOK;
+
+    const BASE_GRAPH_URL = 'https://graph.facebook.com';
+    const API_VERSION = 'v2.11';
     const DEFAULT_SCOPES = [
-        FacebookService::SCOPE_EMAIL,
-        FacebookService::SCOPE_USER_ABOUT,
-        FacebookService::SCOPE_USER_BIRTHDAY,
+        'email',
+        'user_about_me',
     ];
 
-    const API_VERSION = '2.8';
+    /**
+     * @var AbstractProviderBase
+     */
+    private $service;
 
     /**
-     * @var FacebookService
+     * @return BaseService
      */
-    protected $service;
+    public function getService() : AbstractProviderBase
+    {
+        if (!$this->service) {
+            $this->service = new BaseService(array_merge($this->getOptions(), [
+                'clientId'     => $this->getKey(),
+                'clientSecret' => $this->getSecret(),
+                'redirectUri'  => $this->getRedirectUrl(),
+                'graphApiVersion' => self::API_VERSION,
+            ]));
+
+            $this->service->setHttpClient(self::guzzle(self::class));
+        }
+
+        return $this->service;
+    }
 
     /**
      * {@inheritdoc}
@@ -44,19 +68,32 @@ class Facebook extends AbstractProvider
     public function getUser() : User
     {
         $code = self::request()->getQuery('code');
-        $state = self::request()->getQuery('state');
 
         if (!$code) {
             throw new \LogicException('No code found on oauth route end');
         }
 
-        // This was a callback request from facebook, get the token
-        $token = $this->service->requestAccessToken($code, $state);
+        // token
+        $token = $this->getService()->getAccessToken('authorization_code', [
+            'code' => $code
+        ]);
 
-        // Send a request with it
-        $result = json_decode($this->service->request(
-            '/me?fields=id,name,birthday,verified,first_name,last_name,email,locale'
-        ), true);
+        // user
+        $fields = [
+            'id', 'name', 'first_name', 'last_name', 'verified',
+            'email', 'hometown', 'picture.type(large){url,is_silhouette}',
+            'cover{source}', 'gender', 'locale', 'link', 'timezone', 'age_range', 'birthday'
+        ];
+        $appSecretProof = AppSecretProof::create($this->getSecret(), $token->getToken());
+        $url = self::BASE_GRAPH_URL . '/' . self::API_VERSION . '/me?fields=' . implode(',', $fields) .
+            '&access_token=' . $token . '&appsecret_proof=' . $appSecretProof;
+
+        $request = $this->getService()->getAuthenticatedRequest(
+            BaseService::METHOD_GET,
+            $url,
+            $token
+        );
+        $result = $this->getService()->getParsedResponse($request);
 
         $gender = $this->pop($result, 'gender');
         $birthday = $this->pop($result, 'birthday');
@@ -71,8 +108,8 @@ class Facebook extends AbstractProvider
             }
         }
 
-        $user = new User($this->getType());
-        $user->setUid($this->pop($result, 'id'))
+        $user = (new User($this->getType(), $token))
+            ->setUid($this->pop($result, 'id'))
             ->setEmail($this->pop($result, 'email'))
             ->setVerified($this->pop($result, 'verified'))
             ->setFirstName($this->pop($result, 'first_name'))
@@ -100,8 +137,8 @@ class Facebook extends AbstractProvider
             window.fbAsyncInit = function ()
             {
                 FB.init({
-                    appId: '" . DI::config()->get('socials/' . $this->getType() . '/key') . "',
-                    version: 'v" . self::API_VERSION . "', 
+                    appId: '" . DI::config()->get('socials/' . strtolower($this->getType()) . '/key') . "',
+                    version: 'v2.8', 
                     cookie: true
                 });
             

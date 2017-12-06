@@ -16,18 +16,29 @@ namespace Cawa\Oauth;
 use Cawa\Core\DI;
 use Cawa\Oauth;
 use Cawa\Router\RouterFactory;
-use OAuth\Common\Consumer\Credentials;
-use OAuth\Common\Service\ServiceInterface;
-use OAuth\ServiceFactory;
+use Cawa\Session\SessionFactory;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\CurlHandler;
+use GuzzleHttp\HandlerStack;
+use League\OAuth1\Client\Server\Server;
+use League\OAuth2\Client\Provider\AbstractProvider as AbstractProviderBase;
 
 abstract class AbstractProvider
 {
     use RouterFactory;
+    use SessionFactory;
+
+    const TYPE_FACEBOOK = 'Facebook';
+    const TYPE_GOOGLE = 'Google';
+    const TYPE_LIVE = 'Live';
+    const TYPE_MICROSOFT = 'Microsoft';
+    const TYPE_TWITTER = 'Twitter';
+    const TYPE_YAHOO = 'Yahoo';
 
     /**
      * @var string
      */
-    private $type;
+    protected $type;
 
     /**
      * @return string
@@ -37,61 +48,198 @@ abstract class AbstractProvider
         return $this->type;
     }
 
-    public static function create(string $service) : AbstractProvider
+    /**
+     * @var string
+     */
+    private $key;
+
+    /**
+     * @return string
+     */
+    protected function getKey() : string
     {
-        // persistent storage to save the token
-        $storage = new SessionStorage();
+        return $this->key;
+    }
 
-        // Setup the credentials for the requests
-        $credentials = new Credentials(
-            DI::config()->get('socials/' . $service . '/key'),
-            DI::config()->get('socials/' . $service . '/secret'),
-            self::uri('oauth/end', ['service' => $service])->get(false)
-        );
+    /**
+     * @var string
+     */
+    private $secret;
 
-        // Oauth Service
-        $serviceFactory = new ServiceFactory();
-        $serviceFactory->setHttpClient(new HttpClient());
+    /**
+     * @return string
+     */
+    protected function getSecret() : string
+    {
+        return $this->secret;
+    }
 
-        $class = 'Cawa\\Oauth\\Providers\\' . ucfirst($service);
+    /**
+     * @var array
+     */
+    private $scopes = [];
+
+    /**
+     * @return array
+     */
+    protected function getScopes() : array
+    {
+        return $this->scopes;
+    }
+
+    /**
+     * @param array $scopes
+     *
+     * @return self
+     */
+    public function setScopes(array $scopes) : self
+    {
+        $this->scopes = $scopes;
+
+        return $this;
+    }
+
+    /**
+     * @var array
+     */
+    private $options = [];
+
+    /**
+     * @return array
+     */
+    protected function getOptions() : array
+    {
+        return $this->options;
+    }
+
+    /**
+     * @param array $options
+     *
+     * @return self
+     */
+    public function setOptions(array $options) : self
+    {
+        $this->options = $options;
+
+        return $this;
+    }
+
+    /**
+     * @var string
+     */
+    private $redirectUrl;
+
+    /**
+     * @return string
+     */
+    protected function getRedirectUrl() : string
+    {
+        return $this->redirectUrl;
+    }
+
+    /**
+     * @return Client
+     */
+    public function getHttpClient() : Client
+    {
+        if (!class_exists('Cawa\Clockwork\DataSource\Guzzle')) {
+            return null;
+        }
+
+        $stack = HandlerStack::create();
+        $stack->setHandler(new CurlHandler());
+        $stack->push(new \Cawa\Clockwork\DataSource\Guzzle());
+        return new Client(['handler' => $stack]);
+    }
+
+    /**
+     * @param string|null $state
+     *
+     * @throws Exceptions\NoStateFound
+     * @throws Exceptions\InvalidState
+     *
+     * @return bool
+     */
+    public function controlState(string $state = null) : bool
+    {
+        if (!$state) {
+            throw new Oauth\Exceptions\NoStateFound($this->type);
+        }
+
+        $current = self::session()->getFlush(Module::SESSION_STATE);
+
+        if ($current !== $state) {
+            throw new Oauth\Exceptions\InvalidState($this->type);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string|null $error
+     *
+     * @return Exceptions\Denied
+     * @throws \Exception
+     */
+    public function controlError(string $error = null) : ?Oauth\Exceptions\Denied
+    {
+        if ($error == 'access_denied') {
+            return new Oauth\Exceptions\Denied($this->getType(), $error, sprintf("Error Code '%s'", $error));
+        } elseif ($error) {
+            throw new \Exception(sprintf("Failed with error '%s'", $error));
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $serviceName
+     *
+     * @return AbstractProvider
+     */
+    public static function factory(string $serviceName) : AbstractProvider
+    {
+        $class = 'Cawa\\Oauth\\Providers\\' . constant(self::class . '::TYPE_' . strtoupper($serviceName));
 
         /** @var AbstractProvider $provider */
         $provider = new $class();
-        $provider->type = $service;
+        $provider->key = DI::config()->get('socials/' . strtolower($serviceName) . '/key');
+        $provider->secret = DI::config()->get('socials/' . strtolower($serviceName)  . '/secret');
+        $provider->redirectUrl = self::uri('oauth/end', ['service' => strtolower($serviceName)])->get(false);
 
-        // scope
-        $scopes = DI::config()->getIfExists('socials/' . $service . '/scopes');
-
-        if (!$scopes && defined($class . '::DEFAULT_SCOPES')) {
-            $scopes = constant($class . '::DEFAULT_SCOPES');
+        if ($scopes = DI::config()->getIfExists('socials/' . strtolower($serviceName) . '/scopes')) {
+            $provider->scopes = $scopes;
+        } else if (defined($class . '::DEFAULT_SCOPES') && $scopes = constant($class . '::DEFAULT_SCOPES')) {
+            $provider->scopes = $scopes;
         }
-
-        if (!$scopes) {
-            $scopes = [];
-        }
-
-        // version
-        $version = null;
-        if (defined($class . '::API_VERSION')) {
-            $version = constant($class . '::API_VERSION');
-        }
-
-        $service = $serviceFactory->createService($service, $credentials, $storage, $scopes, null, $version);
-        $provider->service = $service;
 
         return $provider;
     }
 
     /**
-     * @var ServiceInterface
+     * @return AbstractProviderBase|Server
      */
-    protected $service;
+    abstract public function getService();
+
+    /**
+     * @return string
+     */
+    public function getAuthorizationUri() : string
+    {
+        $state = bin2hex(random_bytes(32 / 2));
+        self::session()->set(Module::SESSION_STATE, $state);
+
+        return $this->getService()->getAuthorizationUrl([
+            'state' => $state,
+            'scopes' => $this->scopes,
+        ]);
+    }
 
     /**
      * @param array $array
      * @param string|array $key
      *
-     * @return null|mixed
+     * @return null|string|bool
      */
     protected function pop(array &$array, $key)
     {
@@ -115,17 +263,10 @@ abstract class AbstractProvider
     }
 
     /**
+     * @throws Oauth\Exceptions\NoStateFound
+     * @throws Oauth\Exceptions\InvalidState
+     *
      * @return User|Oauth\Exceptions\Denied
      */
     abstract public function getUser();
-
-    /**
-     * @return string
-     */
-    public function getAuthorizationUri() : string
-    {
-        $url = $this->service->getAuthorizationUri();
-
-        return $url->__toString();
-    }
 }

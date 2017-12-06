@@ -14,23 +14,68 @@ declare(strict_types = 1);
 namespace Cawa\Oauth\Providers;
 
 use Cawa\App\HttpFactory;
+use Cawa\HttpClient\HttpClientFactory;
 use Cawa\Oauth\AbstractProvider;
 use Cawa\Oauth\Exceptions\Denied;
+use Cawa\Oauth\Module;
 use Cawa\Oauth\User;
-use OAuth\OAuth2\Service\Yahoo as YahooService;
+use Cawa\Session\SessionFactory;
+use League\OAuth2\Client\Provider\AbstractProvider as AbstractProviderBase;
+use League\OAuth2\Client\Provider\GenericProvider;
 
 class Yahoo extends AbstractProvider
 {
     use HttpFactory;
+    use HttpClientFactory;
+    use SessionFactory;
 
+    protected $type = self::TYPE_YAHOO;
+
+    const BASE_API_URL = 'https://social.yahooapis.com/v1';
     const DEFAULT_SCOPES = [
-        YahooService::SCOPE_OPENID,
+        'openid',
     ];
 
     /**
-     * @var YahooService
+     * @var AbstractProviderBase
      */
-    protected $service;
+    private $service;
+
+    /**
+     * @return GenericProvider
+     */
+    public function getService() : AbstractProviderBase
+    {
+        if (!$this->service) {
+            $this->service = new GenericProvider(array_merge($this->getOptions(), [
+                'clientId' => $this->getKey(),
+                'clientSecret' => $this->getSecret(),
+                'redirectUri' => $this->getRedirectUrl(),
+                'scopes' => $this->getScopes(),
+                'scopeSeparator' => ' ',
+                'urlAuthorize' => 'https://api.login.yahoo.com/oauth2/request_auth',
+                'urlAccessToken' => 'https://api.login.yahoo.com/oauth2/get_token',
+                'urlResourceOwnerDetails' => 'http://brentertainment.com/oauth2/lockdin/resource'
+            ]));
+
+            $this->service->setHttpClient(self::guzzle(self::class));
+        }
+
+        return $this->service;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuthorizationUri() : string
+    {
+        $state = bin2hex(random_bytes(32 / 2));
+        self::session()->set(Module::SESSION_STATE, $state);
+
+        return $this->getService()->getAuthorizationUrl([
+            'state' => $state,
+        ]);
+    }
 
     /**
      * {@inheritdoc}
@@ -38,9 +83,11 @@ class Yahoo extends AbstractProvider
     public function getUser()
     {
         $code = self::request()->getQuery('code');
-        $state = self::request()->getQuery('state');
-
         $error = self::request()->getQuery('error');
+
+        if (!$code) {
+            throw new \LogicException('No code found on oauth route end');
+        }
 
         if ($error == 'access_denied') {
             return new Denied($this->getType(), $error, sprintf("Error Code '%s'", $error));
@@ -48,18 +95,19 @@ class Yahoo extends AbstractProvider
             throw new \Exception(sprintf("Failed with error '%s'", $error));
         }
 
-        if (!$code) {
-            throw new \LogicException('No code found on oauth route end');
-        }
+        // token
+        $token = $this->getService()->getAccessToken('authorization_code', [
+            'code' => $code
+        ]);
 
-        // This was a callback request from google, get the token
-        $token = $this->service->requestAccessToken($code, $state);
-        $yahooGuid = $token->getExtraParams()['xoauth_yahoo_guid'];
+        $yahooGuid = $token->getValues()['xoauth_yahoo_guid'];
 
-        $url = 'https://social.yahooapis.com/v1/user/' . $yahooGuid . '/profile?format=json';
-
-        // Send a request with it
-        $result = json_decode($this->service->request($url), true);
+        $request = $this->getService()->getAuthenticatedRequest(
+            GenericProvider::METHOD_GET,
+            self::BASE_API_URL . '/user/' . $yahooGuid . '/profile?format=json',
+            $token
+        );
+        $result = $this->getService()->getParsedResponse($request);
         $result = $result['profile'];
 
         $email = $result['emails'][0]['handle'];

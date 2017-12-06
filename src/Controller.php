@@ -16,6 +16,7 @@ namespace Cawa\Oauth;
 use Cawa\App\AbstractApp;
 use Cawa\App\HttpFactory;
 use Cawa\Controller\AbstractController;
+use Cawa\Oauth\Exceptions\InvalidState;
 use Cawa\Oauth\Providers\Facebook;
 use Cawa\Renderer\Element;
 use Cawa\Router\RouterFactory;
@@ -37,21 +38,30 @@ class Controller extends AbstractController
             self::session()->set(Module::SESSION_FROM, $from);
         }
 
-        $provider = AbstractProvider::create($service);
+        $provider = AbstractProvider::factory($service);
         self::response()->redirect((string) $provider->getAuthorizationUri());
     }
 
     /**
      * @param string $service
+     *
+     * @throws InvalidState
      */
     public function end(string $service)
     {
-        $provider = AbstractProvider::create($service);
-        $user = $provider->getUser();
+        $provider = AbstractProvider::factory($service);
+        if (!$provider->controlState(self::request()->getQuery('state'))) {
+            throw new InvalidState($service);
+        }
 
-        self::session()->set(Module::SESSION_NAME, $user);
-        self::session()->remove(SessionStorage::SESSION_VAR_STATE);
-        self::session()->remove(SessionStorage::SESSION_VAR_TOKEN);
+        $exception = $provider->controlError(self::request()->getQuery('error'));
+        $user = null;
+
+        if (!$exception) {
+            $user = $provider->getUser();
+        }
+
+        self::session()->set(Module::SESSION_NAME, $exception ?: $user);
 
         /* @var \Cawa\Oauth\Module $module */
         $module = AbstractApp::instance()->getModule('Cawa\\Oauth\\Module');
@@ -86,7 +96,7 @@ class Controller extends AbstractController
         $module = AbstractApp::instance()->getModule('Cawa\\Oauth\\Module');
 
         /** @var Facebook $provider */
-        $provider = AbstractProvider::create($service);
+        $provider = AbstractProvider::factory($service);
         $masterpage = $provider->getClientMasterPage($from ?: self::uri($module->getRedirectRoute())->get(false));
 
         $masterpage->addCss('

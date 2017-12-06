@@ -15,17 +15,87 @@ namespace Cawa\Oauth\Providers;
 
 use Cawa\App\HttpFactory;
 use Cawa\Oauth\AbstractProvider;
+use Cawa\Oauth\Exceptions\NoStateFound;
+use Cawa\Oauth\Module;
 use Cawa\Oauth\User;
-use OAuth\OAuth1\Service\Twitter as TwitterService;
+use Cawa\Session\SessionFactory;
+use League\OAuth1\Client\Credentials\TemporaryCredentials;
+use League\OAuth1\Client\Server\Server;
+use League\OAuth1\Client\Server\Twitter as BaseService;
 
 class Twitter extends AbstractProvider
 {
     use HttpFactory;
+    use SessionFactory;
+
+    protected $type = self::TYPE_TWITTER;
 
     /**
-     * @var TwitterService
+     * @var BaseService
      */
-    protected $service;
+    private $service;
+
+    /**
+     * @return Server
+     */
+    public function getService() : Server
+    {
+        if (!$this->service) {
+            $this->service = new BaseService(array_merge($this->getOptions(), [
+                'identifier'     => $this->getKey(),
+                'secret' => $this->getSecret(),
+                'callback_uri'  => $this->getRedirectUrl(),
+            ]));
+        }
+
+        return $this->service;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuthorizationUri() : string
+    {
+        $temporaryCredentials = $this->getService()->getTemporaryCredentials();
+        self::session()->set(
+            Module::SESSION_STATE,
+            json_encode([
+                $temporaryCredentials->getIdentifier(),
+                $temporaryCredentials->getSecret()
+            ])
+        );
+
+        return $this->getService()->getAuthorizationUrl($temporaryCredentials);
+    }
+
+    /**
+     * @var TemporaryCredentials
+     */
+    private $temporaryCredentials;
+
+    /**
+     * @param string|null $state
+     *
+     * @throws NoStateFound
+     *
+     * @return bool
+     */
+    public function controlState(string $state = null) : bool
+    {
+        $current = self::session()->getFlush(Module::SESSION_STATE);
+
+        if (!$current) {
+            throw new NoStateFound($this->getType());
+        }
+
+        $current = json_decode($current);
+
+        $this->temporaryCredentials = new TemporaryCredentials();
+        $this->temporaryCredentials->setIdentifier($current[0]);
+        $this->temporaryCredentials->setSecret($current[1]);
+
+        return true;
+    }
 
     /**
      * {@inheritdoc}
@@ -39,16 +109,10 @@ class Twitter extends AbstractProvider
             throw new \LogicException('No code found on oauth route end');
         }
 
-        $token = $this->service->getStorage()->retrieveAccessToken('Twitter');
+        $tokenCredentials = $this->getService()->getTokenCredentials($this->temporaryCredentials, $oauthToken, $oauthVerifier);
 
-        // This was a callback request from twitter, get the token
-        $this->service->requestAccessToken(
-            $oauthToken,
-            $oauthVerifier,
-            $token->getRequestTokenSecret()
-        );
-        // Send a request now that we have access token
-        $result = json_decode($this->service->request('account/verify_credentials.json?include_email=true'), true);
+        $twitterUser = $this->getService()->getUserDetails($tokenCredentials);
+        $result = $this->transformUser($twitterUser);
 
         $name = $this->pop($result, 'name');
         $firstname = $lastname = null;
@@ -62,7 +126,7 @@ class Twitter extends AbstractProvider
 
         $email = $this->pop($result, 'email');
 
-        $user = new User($this->getType());
+        $user = new User($this->getType(), $tokenCredentials);
         $user->setUid($this->pop($result, 'id_str'))
             ->setEmail($email)
             ->setUsername($this->pop($result, 'screen_name'))
@@ -77,13 +141,38 @@ class Twitter extends AbstractProvider
     }
 
     /**
-     * @return string
+     * @param \League\OAuth1\Client\Server\User $twitterUser
+     *
+     * @return array
      */
-    public function getAuthorizationUri() : string
+    private function transformUser(\League\OAuth1\Client\Server\User $twitterUser) : array
     {
-        $token = $this->service->requestRequestToken();
-        $url = $this->service->getAuthorizationUri(['oauth_token' => $token->getRequestToken()]);
+        $result = $twitterUser->extra;
 
-        return $url->__toString();
+        $result['id_str'] = $twitterUser->uid;
+        $result['screen_name'] = $twitterUser->nickname;
+        $result['name'] = $twitterUser->name;
+
+        if ($twitterUser->email) {
+            $result['email'] = $twitterUser->email;
+        }
+
+        if ($twitterUser->location) {
+            $result['location'] = $twitterUser->location;
+        }
+
+        if ($twitterUser->description) {
+            $result['description'] = $twitterUser->location;
+        }
+
+        if ($twitterUser->imageUrl) {
+            $result['profile_image_url'] = $twitterUser->imageUrl;
+        }
+
+        foreach ($twitterUser->urls as $key => $url) {
+            $result[$key] = $url;
+        }
+
+        return $result;
     }
 }

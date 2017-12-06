@@ -14,6 +14,8 @@ declare(strict_types = 1);
 namespace Cawa\Oauth;
 
 use Cawa\Date\Date;
+use League\OAuth1\Client\Credentials\TokenCredentials;
+use League\OAuth2\Client\Token\AccessToken;
 
 class User
 {
@@ -31,15 +33,16 @@ class User
     }
 
     /**
-     * @param string $type
-     *
-     * @return $this|self
+     * @var AccessToken|TokenCredentials
      */
-    public function setType(string $type) : self
-    {
-        $this->type = $type;
+    private $accessToken;
 
-        return $this;
+    /**
+     * @return AccessToken|TokenCredentials
+     */
+    public function getAccessToken()
+    {
+        return $this->accessToken;
     }
 
     /**
@@ -228,6 +231,31 @@ class User
     }
 
     /**
+     * @var string
+     */
+    private $phone;
+
+    /**
+     * @return string
+     */
+    public function getPhone()
+    {
+        return $this->phone;
+    }
+
+    /**
+     * @param string $phone
+     *
+     * @return $this|self
+     */
+    public function setPhone($phone) : self
+    {
+        $this->phone = $phone;
+
+        return $this;
+    }
+    
+    /**
      * @var Date
      */
     private $birthday;
@@ -283,7 +311,7 @@ class User
     private $extraData = [];
 
     /**
-     * @return string
+     * @return array
      */
     public function getExtraData() : array
     {
@@ -293,7 +321,7 @@ class User
     /**
      * @param array $data
      *
-     * @return array
+     * @return $this
      */
     public function setExtraData(array $data) : self
     {
@@ -304,9 +332,11 @@ class User
 
     /**
      * @param string $type
+     * @param AccessToken|TokenCredentials $token
      */
-    public function __construct(string $type)
+    public function __construct(string $type, $token = null)
     {
         $this->type = $type;
+        $this->accessToken = $token;
     }
 }

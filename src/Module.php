@@ -32,6 +32,11 @@ class Module extends \Cawa\App\Module
     const SESSION_FROM = 'FROM';
 
     /**
+     * the state
+     */
+    const SESSION_STATE = 'STATE';
+
+    /**
      * @var string
      */
     private $redirectRoute;
@@ -45,11 +50,40 @@ class Module extends \Cawa\App\Module
     }
 
     /**
-     * @param string $redirectRoute
+     * @var array
      */
-    public function __construct(string $redirectRoute)
+    private $enabledAuths = [];
+
+    /**
+     * @return array
+     */
+    public function getEnabledAuths() : array
+    {
+        if (sizeof($this->enabledAuths) > 0) {
+            return $this->enabledAuths;
+        }
+
+        $return = [];
+        $reflection = new \ReflectionClass(AbstractProvider::class);
+
+        foreach ($reflection->getConstants() as $key => $constant) {
+            if (stripos($key, 'TYPE_') !== false) {
+                $return[] = $constant;
+            }
+        }
+
+        return $return;
+
+    }
+
+    /**
+     * @param string $redirectRoute
+     * @param array $enabledAuths
+     */
+    public function __construct(string $redirectRoute, array $enabledAuths = [])
     {
         $this->redirectRoute = $redirectRoute;
+        $this->enabledAuths = $enabledAuths;
     }
 
     /**
@@ -57,7 +91,9 @@ class Module extends \Cawa\App\Module
      */
     public function init() : bool
     {
-        $providers = '{{C:<service>(twitter|facebook|microsoft|google|yahoo)}}';
+        $auths = array_map('strtolower', $this->getEnabledAuths());
+
+        $providers = '{{C:<service>(' . implode('|', $auths) . ')}}';
 
         self::router()->addRoutes([
             (new Route())->setName('oauth/start')
@@ -68,14 +104,16 @@ class Module extends \Cawa\App\Module
                 ]),
         ]);
 
-        self::router()->addRoutes([
-            (new Route())->setName('oauth/client')
-                ->setMatch('/oauth/{{C:<service>(facebook)}}/client')
-                ->setController('Cawa\\Oauth\\Controller::client')
-                ->setUserInputs([
-                    new UserInput('from', 'string'),
-                ]),
-        ]);
+        if (in_array(AbstractProvider::TYPE_FACEBOOK, $this->getEnabledAuths())) {
+            self::router()->addRoutes([
+                (new Route())->setName('oauth/client')
+                    ->setMatch('/oauth/{{C:<service>(facebook)}}/client')
+                    ->setController('Cawa\\Oauth\\Controller::client')
+                    ->setUserInputs([
+                        new UserInput('from', 'string'),
+                    ]),
+            ]);
+        }
 
         self::router()->addRoutes([
             (new Route())->setName('oauth/end')
