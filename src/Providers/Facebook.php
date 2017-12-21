@@ -124,11 +124,12 @@ class Facebook extends AbstractProvider
     }
 
     /**
-     * @param string $redirect
+     * @param string $from
+     * @param string $failed
      *
      * @return HtmlPage
      */
-    public function getClientMasterpage(string $redirect) : HtmlPage
+    public function getClientMasterpage(string $from, string $failed = null) : HtmlPage
     {
         $masterpage = (new HtmlPage());
         $masterpage->setHeadTitle('Facebook Connect');
@@ -151,9 +152,9 @@ class Facebook extends AbstractProvider
                     if (response.status === 'connected') {
                         window.location.href = '/oauth/facebook/start'
                     } else if (response.status === 'not_authorized') {
-                        window.location.href = " . json_encode($redirect) . '
+                        window.location.href = " . json_encode($failed ?: $from) . '
                     } else {
-                        window.location.href = ' . json_encode($redirect) . '
+                        window.location.href = ' . json_encode($failed ?: $from) . '
                     }
                 });
             };

@@ -31,11 +31,16 @@ class Controller extends AbstractController
     /**
      * @param string $service
      * @param string $from
+     * @param string $failed
      */
-    public function start(string $service, string $from = null)
+    public function start(string $service, string $from = null, string $failed = null)
     {
         if ($from) {
-            self::session()->set(Module::SESSION_FROM, $from);
+            self::session()->set(Module::SESSION_REDIRECT_URL, $from);
+        }
+
+        if ($failed) {
+            self::session()->set(Module::SESSION_FAILURE_URL, $failed);
         }
 
         $provider = AbstractProvider::factory($service);
@@ -66,15 +71,15 @@ class Controller extends AbstractController
         /* @var \Cawa\Oauth\Module $module */
         $module = AbstractApp::instance()->getModule('Cawa\\Oauth\\Module');
 
-        $url = self::session()->get(Module::SESSION_FROM);
-        self::session()->remove(Module::SESSION_FROM);
-
-        if (!$user instanceof User) {
-            $url = null;
-        }
+        $url = self::session()->getFlush(Module::SESSION_REDIRECT_URL);
+        $failed = self::session()->getFlush(Module::SESSION_FAILURE_URL);
 
         if (!$url) {
             $url = self::uri($module->getRedirectRoute());
+        }
+
+        if ($exception && $failed) {
+            $url = $failed;
         }
 
         self::response()->redirect($url);
@@ -83,13 +88,18 @@ class Controller extends AbstractController
     /**
      * @param string $service
      * @param string|null $from
+     * @param string|null $failed
      *
      * @return string
      */
-    public function client(string $service, string $from = null)
+    public function client(string $service, string $from = null, string $failed = null)
     {
         if ($from) {
-            self::session()->set(Module::SESSION_FROM, $from);
+            self::session()->set(Module::SESSION_REDIRECT_URL, $from);
+        }
+
+        if ($failed) {
+            self::session()->set(Module::SESSION_FAILURE_URL, $failed);
         }
 
         /* @var \Cawa\Oauth\Module $module */
@@ -97,7 +107,7 @@ class Controller extends AbstractController
 
         /** @var Facebook $provider */
         $provider = AbstractProvider::factory($service);
-        $masterpage = $provider->getClientMasterPage($from ?: self::uri($module->getRedirectRoute())->get(false));
+        $masterpage = $provider->getClientMasterPage($from ?: self::uri($module->getRedirectRoute())->get(false), $failed);
 
         $masterpage->addCss('
             .spinner {

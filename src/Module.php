@@ -29,7 +29,12 @@ class Module extends \Cawa\App\Module
     /**
      * the redirect url.
      */
-    const SESSION_FROM = 'FROM';
+    const SESSION_REDIRECT_URL = 'OAUTH-R';
+
+    /**
+     * the failure redirect url.
+     */
+    const SESSION_FAILURE_URL = 'OAUTH-F';
 
     /**
      * the state
@@ -101,6 +106,7 @@ class Module extends \Cawa\App\Module
                 ->setController('Cawa\\Oauth\\Controller::start')
                 ->setUserInputs([
                     new UserInput('from', 'string'),
+                    new UserInput('failed', 'string'),
                 ]),
         ]);
 
@@ -111,6 +117,7 @@ class Module extends \Cawa\App\Module
                     ->setController('Cawa\\Oauth\\Controller::client')
                     ->setUserInputs([
                         new UserInput('from', 'string'),
+                        new UserInput('failed', 'string'),
                     ]),
             ]);
         }
