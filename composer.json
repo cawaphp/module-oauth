@@ -4,7 +4,7 @@
     "keywords": ["cawa", "oauth", "oauth2"],
     "minimum-stability": "dev",
     "prefer-stable" : true,
-    "license": "GPL-3.0",
+    "license": "GPL-3.0-only",
     "authors": [
         {
             "name": "tchiotludo"
