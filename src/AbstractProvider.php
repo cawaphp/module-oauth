@@ -184,7 +184,7 @@ abstract class AbstractProvider
     public function controlError(string $error = null) : ?Oauth\Exceptions\Denied
     {
         if ($error == 'access_denied') {
-            return new Oauth\Exceptions\Denied($this->getType(), $error, sprintf("Error Code '%s'", $error));
+            return new Oauth\Exceptions\Denied($this->getType(), sprintf("Error Code '%s'", $error));
         } elseif ($error) {
             throw new \Exception(sprintf("Failed with error '%s'", $error));
         }

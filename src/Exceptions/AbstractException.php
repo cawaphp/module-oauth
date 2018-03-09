@@ -48,7 +48,7 @@ class AbstractException extends \Exception
      * @param int $code
      * @param \Exception $previous
      */
-    public function __construct(string $provider, string $key = null, $message, $code = 0, \Exception $previous = null)
+    public function __construct(string $provider, string $key, $message, $code = 0, \Exception $previous = null)
     {
         $this->provider = $provider;
         $this->key = $key;

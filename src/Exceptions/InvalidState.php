@@ -24,7 +24,7 @@ class InvalidState extends AbstractException
     {
         parent::__construct(
             $provider,
-            null,
+            'invalid_state',
             "Invalid state for service '" . $provider . "'",
             $code,
             $previous

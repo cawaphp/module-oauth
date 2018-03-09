@@ -54,16 +54,17 @@ class Controller extends AbstractController
      */
     public function end(string $service)
     {
-        $provider = AbstractProvider::factory($service);
-        if (!$provider->controlState(self::request()->getQuery('state'))) {
-            throw new InvalidState($service);
-        }
-
-        $exception = $provider->controlError(self::request()->getQuery('error'));
         $user = null;
 
-        if (!$exception) {
-            $user = $provider->getUser();
+        $provider = AbstractProvider::factory($service);
+        if (!$provider->controlState(self::request()->getQuery('state'))) {
+            $exception = new InvalidState($service);
+        } else {
+            $exception = $provider->controlError(self::request()->getQuery('error'));
+
+            if (!$exception) {
+                $user = $provider->getUser();
+            }
         }
 
         self::session()->set(Module::SESSION_NAME, $exception ?: $user);

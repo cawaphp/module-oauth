@@ -15,4 +15,19 @@ namespace Cawa\Oauth\Exceptions;
 
 class Denied extends AbstractException
 {
+    /**
+     * @param string $provider
+     * @param int $code
+     * @param \Exception $previous
+     */
+    public function __construct(string $provider, $code = 0, \Exception $previous = null)
+    {
+        parent::__construct(
+            $provider,
+            'access_denied',
+            "Access denied by user for service '" . $provider . "'",
+            $code,
+            $previous
+        );
+    }
 }

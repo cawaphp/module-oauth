@@ -90,9 +90,9 @@ class Yahoo extends AbstractProvider
         }
 
         if ($error == 'access_denied') {
-            return new Denied($this->getType(), $error, sprintf("Error Code '%s'", $error));
+            return new Denied($this->getType(), sprintf("Error Code '%s'", $error));
         } elseif ($error) {
-            throw new \Exception(sprintf("Failed with error '%s'", $error));
+            throw new \RuntimeException(sprintf("Failed with error '%s'", $error));
         }
 
         // token

@@ -24,7 +24,7 @@ class NoStateFound extends AbstractException
     {
         parent::__construct(
             $provider,
-            null,
+            'no_state_found',
             "No state found for service '" . $provider . "'",
             $code,
             $previous
