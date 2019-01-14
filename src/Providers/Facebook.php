@@ -107,14 +107,16 @@ class Facebook extends AbstractProvider
                 $birthday = new Date($explode[0] . '-00-00');
             }
         }
+        $verified = $this->pop($result, 'verified');
+        $locale = $this->pop($result, 'locale');
 
         $user = (new User($this->getType(), $token))
             ->setUid($this->pop($result, 'id'))
             ->setEmail($this->pop($result, 'email'))
-            ->setVerified($this->pop($result, 'verified'))
+            ->setVerified(is_bool($verified) ? $verified : false)
             ->setFirstName($this->pop($result, 'first_name'))
             ->setLastName($this->pop($result, 'last_name'))
-            ->setLocale(substr($this->pop($result, 'locale'), 0, 2))
+            ->setLocale($locale ? substr($locale, 0, 2) : null)
             ->setGender($gender == 'male' ? User::GENDER_MALE : ($gender == 'female' ? User::GENDER_FEMALE : null))
             ->setBirthday($birthday)
             ->setExtraData($result)
